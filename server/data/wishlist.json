@@ -1,0 +1,34 @@
+[
+  {
+    "id": "wl-1782102163576-aohply",
+    "userId": "mqopktts0jou1e",
+    "platform": "Blinkit",
+    "title": "1Litre Bisleri",
+    "productId": "",
+    "url": "",
+    "location": "",
+    "latitude": 0,
+    "longitude": 0,
+    "monitor": false,
+    "desiredPrice": 30,
+    "checkoutUrl": "",
+    "lastSeenPrice": null,
+    "createdAt": "2026-06-22T04:22:43.576Z"
+  },
+  {
+    "id": "wl-1782102541511-pa4706",
+    "userId": "mqopktts0jou1e",
+    "platform": "Blinkit",
+    "title": "Bisleri Packaged Water (1 l)",
+    "productId": "",
+    "url": "https://blinkit.com/prn/bisleri-packaged-water-1-l/prid/318",
+    "location": "",
+    "latitude": 22.584945130588224,
+    "longitude": 88.36207867949594,
+    "monitor": false,
+    "desiredPrice": 30,
+    "checkoutUrl": "https://blinkit.com/prn/bisleri-packaged-water-1-l/prid/318",
+    "lastSeenPrice": 19,
+    "createdAt": "2026-06-22T04:29:01.511Z"
+  }
+]

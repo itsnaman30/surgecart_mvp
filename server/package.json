@@ -1,0 +1,34 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "SurgeCart Backend Engine",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "predev": "node scripts/free-port.js 5000",
+    "dev": "nodemon --use-system-ca index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.500.0",
+    "axios": "^1.16.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "firebase-admin": "^12.0.0",
+    "hpagent": "^1.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.6.1",
+    "node-cron": "^4.2.1",
+    "playwright": "^1.60.0",
+    "puppeteer": "^24.43.0",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

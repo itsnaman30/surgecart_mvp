@@ -1,0 +1,16 @@
+{
+  "short_name": "SurgeCart",
+  "name": "SurgeCart Automated Checking Console",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/dashboard",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait"
+}
