@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
+import { API_URL } from '../config';
 
-const socket = io('http://localhost:5000');
+const socket = io(API_URL);
 
 const DashboardWorkspace = () => {
   const [tracks, setTracks] = useState([]);
@@ -14,7 +15,7 @@ const DashboardWorkspace = () => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/tracks')
+    axios.get(`${API_URL}/api/tracks`)
       .then(res => setTracks(res.data))
       .catch(err => console.error("Could not fetch records:", err));
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const Register = () => {
     const [email, setEmail] = useState('');
@@ -10,7 +11,7 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/auth/register', { email, password, name });
+            await axios.post(`${API_URL}/api/auth/register`, { email, password, name });
             // Redirect or update UI after successful registration
         } catch (err) {
             setError('Registration failed. Please try again.');
