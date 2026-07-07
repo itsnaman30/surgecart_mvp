@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "predev": "node scripts/free-port.js 5000",
-    "dev": "nodemon --use-system-ca index.js"
+    "dev": "nodemon --use-system-ca index.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
