@@ -18,6 +18,16 @@ const dashboardRoutes = require('./routes/dashboard');
 const app = express();
 const server = http.createServer(app);
 
+// Surface errors that would otherwise be swallowed by the runtime. An
+// unhandled rejection or uncaught exception is logged with its stack so
+// failures are diagnosable instead of silently crashing or being ignored.
+process.on('unhandledRejection', (reason) => {
+  console.error('[process] Unhandled promise rejection:', reason && (reason.stack || reason.message || reason));
+});
+process.on('uncaughtException', (err) => {
+  console.error('[process] Uncaught exception:', err && (err.stack || err.message || err));
+});
+
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 
 app.use('/api/dashboard', dashboardRoutes);
@@ -118,6 +128,7 @@ app.get('/api/tracks', async (req, res) => {
     const tracks = await trackStore.findAll();
     res.json(tracks);
   } catch (err) {
+    console.error('[tracks] Failed to load watches:', err && (err.stack || err.message || err));
     res.status(500).json({ error: 'Failed to load watches' });
   }
 });
@@ -176,6 +187,7 @@ app.patch('/api/tracks/:id', async (req, res) => {
 
     res.json(updated);
   } catch (err) {
+    console.error('[tracks] Failed to update watch:', err && (err.stack || err.message || err));
     res.status(500).json({ error: 'Failed to update watch' });
   }
 });
@@ -187,6 +199,7 @@ app.delete('/api/tracks/:id', async (req, res) => {
     if (!removed) return res.status(404).json({ error: 'Watch not found' });
     res.json({ message: 'Watch removed', track: removed });
   } catch (err) {
+    console.error('[tracks] Failed to delete watch:', err && (err.stack || err.message || err));
     res.status(500).json({ error: 'Failed to delete watch' });
   }
 });
@@ -206,6 +219,7 @@ app.post('/api/test/simulate-slot/:id', async (req, res) => {
     });
     res.json({ message: 'Simulated slot alert', updatedTrack: updated });
   } catch (err) {
+    console.error('[tracks] Slot simulation failed:', err && (err.stack || err.message || err));
     res.status(500).json({ error: 'Simulation failed' });
   }
 });
@@ -225,7 +239,12 @@ io.on('connection', (socket) => {
   socket.emit('system_metrics_update', pollingEngine.getMetrics());
 
   socket.on('force_manual_ping', async (trackId) => {
-    await pollingEngine.handleManualPing(trackId);
+    try {
+      await pollingEngine.handleManualPing(trackId);
+    } catch (err) {
+      console.error(`[socket] Manual ping failed for ${trackId}:`, err && (err.stack || err.message || err));
+      socket.emit('engine_error', { trackId, error: err && err.message ? err.message : 'Manual ping failed' });
+    }
   });
 
   socket.on('disconnect', () => {

@@ -58,7 +58,7 @@ const Dashboard = () => {
   const loadAnalytics = useCallback(() => {
     analyticsApi.demand()
       .then((res) => setDemandData(res.data))
-      .catch(() => {});
+      .catch((err) => console.error('[dashboard] Failed to load analytics:', err));
   }, []);
 
   useEffect(() => {
@@ -74,7 +74,7 @@ const Dashboard = () => {
           localStorage.setItem('surge_phone_route', latest);
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error('[dashboard] Failed to load SMS targets:', err));
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
@@ -107,7 +107,7 @@ const Dashboard = () => {
     socket.on('system_metrics_update', (data) => setMetrics(data));
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('[dashboard] Service worker registration failed:', err));
     }
 
     return () => {
