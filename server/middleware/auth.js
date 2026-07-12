@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'surgecart-dev-secret';
+const { JWT_SECRET } = require('../utils/jwt');
 
 function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';

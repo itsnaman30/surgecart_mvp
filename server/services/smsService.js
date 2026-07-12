@@ -1,6 +1,6 @@
-const fs = require('fs');
 const path = require('path');
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const { readJsonFile, writeJsonFile } = require('../utils/jsonStore');
 
 const TARGETS_FILE = path.join(__dirname, '..', 'data', 'sms-targets.json');
 let registeredTargets = [];
@@ -64,24 +64,16 @@ function normalizePhoneNumber(input) {
 }
 
 function loadRegisteredTargets() {
-  try {
-    if (fs.existsSync(TARGETS_FILE)) {
-      const parsed = JSON.parse(fs.readFileSync(TARGETS_FILE, 'utf8'));
-      registeredTargets = Array.isArray(parsed)
-        ? [...new Set(parsed.map(normalizePhoneNumber).filter(Boolean))]
-        : [];
-    }
-  } catch (err) {
-    console.warn('[sms] Could not load registered numbers:', err.message);
-    registeredTargets = [];
-  }
+  const parsed = readJsonFile(TARGETS_FILE, []);
+  registeredTargets = Array.isArray(parsed)
+    ? [...new Set(parsed.map(normalizePhoneNumber).filter(Boolean))]
+    : [];
   return registeredTargets;
 }
 
 function persistRegisteredTargets() {
   try {
-    fs.mkdirSync(path.dirname(TARGETS_FILE), { recursive: true });
-    fs.writeFileSync(TARGETS_FILE, JSON.stringify(registeredTargets, null, 2));
+    writeJsonFile(TARGETS_FILE, registeredTargets);
   } catch (err) {
     console.warn('[sms] Could not persist registered numbers:', err.message);
   }

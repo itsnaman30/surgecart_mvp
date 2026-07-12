@@ -3,14 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const trackStore = require('../services/trackStore');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'surgecart-dev-secret';
+const { makeId } = require('../utils/id');
+const { JWT_SECRET } = require('../utils/jwt');
 
 const inMemoryUsers = new Map();
-
-function mkId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
 
 function useMongo() {
   return !trackStore.isMemoryMode();
@@ -59,7 +55,7 @@ router.post('/register', async (req, res) => {
     if ([...inMemoryUsers.values()].some((u) => u.email === email)) {
       return res.status(400).json({ error: 'Email already registered' });
     }
-    const id = mkId();
+    const id = makeId();
     const user = { _id: id, id, email, password: hashedPassword, name };
     inMemoryUsers.set(id, user);
     return res.status(201).json({
