@@ -3,8 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const trackStore = require('../services/trackStore');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'surgecart-dev-secret';
+const { JWT_SECRET } = require('../middleware/auth');
 
 const inMemoryUsers = new Map();
 

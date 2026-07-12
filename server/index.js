@@ -14,6 +14,7 @@ const waitlistRoutes = require('./routes/waitlist');
 const authRoutes = require('./routes/auth');
 const wishlistRoutesFactory = require('./routes/wishlist');
 const dashboardRoutes = require('./routes/dashboard');
+const { requireAuth } = require('./middleware/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -113,7 +114,7 @@ app.get('/api/analytics/demand', async (req, res) => {
   res.json({ slots, activeWatches, notifiedToday, currentSurge: pollingEngine.getMetrics().lastSurgeLevel });
 });
 
-app.get('/api/tracks', async (req, res) => {
+app.get('/api/tracks', requireAuth, async (req, res) => {
   try {
     const tracks = await trackStore.findAll();
     res.json(tracks);
@@ -122,9 +123,10 @@ app.get('/api/tracks', async (req, res) => {
   }
 });
 
-app.post('/api/tracks', async (req, res) => {
+app.post('/api/tracks', requireAuth, async (req, res) => {
   try {
-    const { platform, location, latitude, longitude, phoneNumber, userId, pollingIntervalMs } = req.body;
+    const { platform, location, latitude, longitude, phoneNumber, pollingIntervalMs } = req.body;
+    const userId = req.userId;
 
     if (!platform || !location?.trim()) {
       return res.status(400).json({ error: 'Platform and location are required.' });
@@ -156,7 +158,7 @@ app.post('/api/tracks', async (req, res) => {
   }
 });
 
-app.patch('/api/tracks/:id', async (req, res) => {
+app.patch('/api/tracks/:id', requireAuth, async (req, res) => {
   try {
     const { status, pollingIntervalMs } = req.body;
     const track = await trackStore.findById(req.params.id);
@@ -180,7 +182,7 @@ app.patch('/api/tracks/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/tracks/:id', async (req, res) => {
+app.delete('/api/tracks/:id', requireAuth, async (req, res) => {
   try {
     pollingEngine.stopTrackPolling(req.params.id);
     const removed = await trackStore.removeById(req.params.id);
@@ -191,7 +193,7 @@ app.delete('/api/tracks/:id', async (req, res) => {
   }
 });
 
-app.post('/api/test/simulate-slot/:id', async (req, res) => {
+app.post('/api/test/simulate-slot/:id', requireAuth, async (req, res) => {
   try {
     const updated = await trackStore.updateById(req.params.id, {
       status: 'Notified',
@@ -210,7 +212,7 @@ app.post('/api/test/simulate-slot/:id', async (req, res) => {
   }
 });
 
-app.patch('/api/settings/polling-interval', (req, res) => {
+app.patch('/api/settings/polling-interval', requireAuth, (req, res) => {
   const { intervalMs } = req.body;
   const allowed = [5000, 30000, 120000];
   if (!allowed.includes(intervalMs)) {
