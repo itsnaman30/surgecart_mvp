@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const { makeId } = require('../utils/id');
+const { readJsonFile } = require('../utils/jsonStore');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const DB_FILE = path.join(DATA_DIR, 'surgecart.db');
@@ -33,23 +35,10 @@ function openDb() {
   return db;
 }
 
-function makeId(prefix) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function readJson(filePath, fallback) {
-  if (!fs.existsSync(filePath)) return fallback;
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8') || JSON.stringify(fallback));
-  } catch (err) {
-    return fallback;
-  }
-}
-
 function migrateJsonSeeds(database) {
   const wishlistCount = database.prepare('SELECT COUNT(*) AS count FROM wishlist_items').get().count;
   if (wishlistCount === 0) {
-    const items = readJson(WISHLIST_JSON, []);
+    const items = readJsonFile(WISHLIST_JSON, []);
     const insertWishlist = database.prepare(`
       INSERT OR IGNORE INTO wishlist_items (
         id, user_id, platform, title, product_id, url, location, latitude, longitude,
@@ -85,7 +74,7 @@ function migrateJsonSeeds(database) {
 
   const smsCount = database.prepare('SELECT COUNT(*) AS count FROM sms_targets').get().count;
   if (smsCount === 0) {
-    const targets = readJson(SMS_TARGETS_JSON, []);
+    const targets = readJsonFile(SMS_TARGETS_JSON, []);
     const insertTarget = database.prepare('INSERT OR IGNORE INTO sms_targets (phone_number, created_at) VALUES (?, ?)');
     const importTargets = database.transaction((rows) => {
       rows.forEach((phoneNumber) => {

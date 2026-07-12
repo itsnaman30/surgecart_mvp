@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const sqlite = require('../db/sqlite');
+const { makeId } = require('../utils/id');
 
 const TrackSchema = new mongoose.Schema({
   platform: { type: String, required: true },
@@ -57,10 +58,6 @@ function setMemoryMode(enabled) {
 
 function isMemoryMode() {
   return useInMemoryDB;
-}
-
-function makeId() {
-  return `mem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 async function countActive() {
@@ -132,7 +129,7 @@ async function create(data) {
     if (USE_SQLITE) {
       return sqlite.createTrack(payload);
     }
-    const track = { _id: makeId(), ...payload };
+    const track = { _id: makeId('mem'), ...payload };
     memoryDB.unshift(track);
     return track;
   }

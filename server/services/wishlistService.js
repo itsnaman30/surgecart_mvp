@@ -1,34 +1,17 @@
-const fs = require('fs');
 const path = require('path');
 const sqlite = require('../db/sqlite');
+const { makeId } = require('../utils/id');
+const { readJsonFile, writeJsonFile } = require('../utils/jsonStore');
 
 const DATA_FILE = path.join(__dirname, '..', 'data', 'wishlist.json');
 const USE_SQLITE = process.env.USE_SQLITE !== 'false';
 
-function ensureDataFile() {
-  if (!fs.existsSync(DATA_FILE)) {
-    fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-    fs.writeFileSync(DATA_FILE, '[]', 'utf8');
-  }
-}
-
 function readAll() {
-  ensureDataFile();
-  const raw = fs.readFileSync(DATA_FILE, 'utf8');
-  try {
-    return JSON.parse(raw || '[]');
-  } catch (err) {
-    return [];
-  }
+  return readJsonFile(DATA_FILE, []);
 }
 
 function writeAll(arr) {
-  ensureDataFile();
-  fs.writeFileSync(DATA_FILE, JSON.stringify(arr, null, 2), 'utf8');
-}
-
-function makeId() {
-  return `wl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  writeJsonFile(DATA_FILE, arr);
 }
 
 async function findByUser(userId) {
@@ -45,7 +28,7 @@ async function createForUser(userId, payload) {
   }
   const all = readAll();
   const item = {
-    id: makeId(),
+    id: makeId('wl'),
     userId,
     platform: payload.platform || 'Unknown',
     title: payload.title || payload.productName || 'Saved item',
