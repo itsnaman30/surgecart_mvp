@@ -1,4 +1,49 @@
 const axios = require('axios');
+const dns = require('dns').promises;
+const net = require('net');
+
+function isPrivateIp(ip) {
+  if (net.isIPv4(ip)) {
+    const [a, b] = ip.split('.').map(Number);
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 0) return true;
+    if (a === 169 && b === 254) return true; // link-local / cloud metadata
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    return false;
+  }
+  if (net.isIPv6(ip)) {
+    const lower = ip.toLowerCase();
+    if (lower === '::1' || lower === '::') return true;
+    if (lower.startsWith('fc') || lower.startsWith('fd')) return true; // unique local
+    if (lower.startsWith('fe80')) return true; // link-local
+    return false;
+  }
+  return false;
+}
+
+// Guard against SSRF: only allow http(s) URLs that resolve to public addresses.
+async function assertSafeUrl(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch (err) {
+    throw new Error('Invalid URL');
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('Only http and https URLs are allowed');
+  }
+
+  const hostname = parsed.hostname;
+  const addresses = net.isIP(hostname)
+    ? [hostname]
+    : (await dns.lookup(hostname, { all: true })).map((entry) => entry.address);
+
+  if (addresses.length === 0 || addresses.some(isPrivateIp)) {
+    throw new Error('URL resolves to a disallowed address');
+  }
+}
 
 function tryParseJsonLd(html) {
   const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
@@ -32,7 +77,12 @@ function extractPriceFromText(html) {
 
 async function scrapeProduct(url) {
   try {
-    const resp = await axios.get(url, { timeout: 8000, headers: { 'User-Agent': 'SurgeCart/1.0 (+https://surgecart)' } });
+    await assertSafeUrl(url);
+    const resp = await axios.get(url, {
+      timeout: 8000,
+      maxRedirects: 0,
+      headers: { 'User-Agent': 'SurgeCart/1.0 (+https://surgecart)' },
+    });
     const html = resp.data || '';
 
     // title

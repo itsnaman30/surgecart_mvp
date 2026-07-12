@@ -5,8 +5,10 @@ const cors = require('cors');
 const notificationRoutes = require('./routes/notificationRoutes');
 const { startTrackPolling } = require('./services/pollingEngine');
 
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: CLIENT_ORIGIN, methods: ['GET', 'POST', 'PATCH', 'DELETE'] }));
 app.use(express.json());
 
 // Bind Device Registration Routing Modules
@@ -54,7 +56,7 @@ app.post('/api/tracks', (req, res) => {
 
 const server = http.createServer(app);
 const ioInstance = new Server(server, {
-  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] }
+  cors: { origin: CLIENT_ORIGIN, methods: ["GET", "POST"] }
 });
 
 ioInstance.on('connection', (socket) => {

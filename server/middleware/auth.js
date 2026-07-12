@@ -1,6 +1,24 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'surgecart-dev-secret';
+const DEV_FALLBACK_SECRET = 'surgecart-dev-secret';
+
+function resolveJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (secret) return secret;
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'JWT_SECRET environment variable is required in production. Refusing to start with an insecure default.'
+    );
+  }
+
+  console.warn(
+    '[auth] JWT_SECRET is not set; falling back to an insecure development secret. Set JWT_SECRET before deploying.'
+  );
+  return DEV_FALLBACK_SECRET;
+}
+
+const JWT_SECRET = resolveJwtSecret();
 
 function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
