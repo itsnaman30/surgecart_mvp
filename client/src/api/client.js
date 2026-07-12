@@ -1,6 +1,6 @@
 import axios from 'axios';
 import io from 'socket.io-client';
-import { API_URL } from '../config';
+import { API_URL, SOCKET_URL } from '../config';
 
 export const api = axios.create({ baseURL: API_URL });
 
@@ -15,7 +15,7 @@ let socketInstance = null;
 
 export function getSocket() {
   if (!socketInstance) {
-    socketInstance = io(API_URL, { autoConnect: true });
+    socketInstance = io(SOCKET_URL || API_URL || undefined, { autoConnect: true });
   }
   return socketInstance;
 }

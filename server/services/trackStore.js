@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const sqlite = require('../db/sqlite');
 
 const TrackSchema = new mongoose.Schema({
   platform: { type: String, required: true },
@@ -21,11 +22,16 @@ const Track = mongoose.model('Track', TrackSchema);
 
 let useInMemoryDB = false;
 let memoryDB = [];
+const USE_SQLITE = process.env.USE_SQLITE !== 'false';
 
 const MAX_WATCHES = 3;
 
 function setMemoryMode(enabled) {
   useInMemoryDB = enabled;
+  if (enabled && USE_SQLITE) {
+    sqlite.seedDefaultTrackIfEmpty();
+    return;
+  }
   if (enabled && memoryDB.length === 0) {
     memoryDB = [
       {
@@ -58,6 +64,9 @@ function makeId() {
 }
 
 async function countActive() {
+  if (useInMemoryDB && USE_SQLITE) {
+    return sqlite.countActiveTracks();
+  }
   if (useInMemoryDB) {
     return memoryDB.filter((t) => t.status === 'Tracking').length;
   }
@@ -65,6 +74,9 @@ async function countActive() {
 }
 
 async function findAll() {
+  if (useInMemoryDB && USE_SQLITE) {
+    return sqlite.findAllTracks();
+  }
   if (useInMemoryDB) {
     return [...memoryDB].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
@@ -72,6 +84,9 @@ async function findAll() {
 }
 
 async function findById(id) {
+  if (useInMemoryDB && USE_SQLITE) {
+    return sqlite.findTrackById(id);
+  }
   if (useInMemoryDB) {
     return memoryDB.find((t) => t._id === id) || null;
   }
@@ -79,6 +94,9 @@ async function findById(id) {
 }
 
 async function findTracking() {
+  if (useInMemoryDB && USE_SQLITE) {
+    return sqlite.findTrackingTracks();
+  }
   if (useInMemoryDB) {
     return memoryDB.filter((t) => t.status === 'Tracking');
   }
@@ -111,6 +129,9 @@ async function create(data) {
   };
 
   if (useInMemoryDB) {
+    if (USE_SQLITE) {
+      return sqlite.createTrack(payload);
+    }
     const track = { _id: makeId(), ...payload };
     memoryDB.unshift(track);
     return track;
@@ -122,6 +143,9 @@ async function create(data) {
 }
 
 async function updateById(id, updates) {
+  if (useInMemoryDB && USE_SQLITE) {
+    return sqlite.updateTrackById(id, updates);
+  }
   if (useInMemoryDB) {
     const idx = memoryDB.findIndex((t) => t._id === id);
     if (idx === -1) return null;
@@ -132,6 +156,9 @@ async function updateById(id, updates) {
 }
 
 async function removeById(id) {
+  if (useInMemoryDB && USE_SQLITE) {
+    return sqlite.removeTrackById(id);
+  }
   if (useInMemoryDB) {
     const idx = memoryDB.findIndex((t) => t._id === id);
     if (idx === -1) return null;

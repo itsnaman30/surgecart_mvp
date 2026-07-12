@@ -19,7 +19,7 @@ const Dashboard = () => {
   const [demandData, setDemandData] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState(localStorage.getItem('surge_phone_route') || '');
   const [pollingInterval, setPollingInterval] = useState('30000');
-  const [pushEnabled, setPushEnabled] = useState(Notification?.permission === 'granted');
+  const [pushEnabled, setPushEnabled] = useState(typeof Notification !== 'undefined' && Notification.permission === 'granted');
   const [connected, setConnected] = useState(socket.connected);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   const [notifications, setNotifications] = useState([]);
@@ -30,7 +30,7 @@ const Dashboard = () => {
   }, []);
 
   const showBrowserNotification = useCallback((track) => {
-    if (Notification.permission !== 'granted') return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
     const n = new Notification(`⚡ Slot open on ${track.platform}!`, {
       body: `A delivery window opened near ${track.location}. Tap to checkout.`,
       icon: '/icon-192.png',
@@ -164,7 +164,7 @@ const Dashboard = () => {
   };
 
   const requestNotificationPermission = async () => {
-    if (!('Notification' in window)) {
+    if (typeof Notification === 'undefined') {
       return triggerToast('This browser does not support notifications', 'error');
     }
     const permission = await Notification.requestPermission();

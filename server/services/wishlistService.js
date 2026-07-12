@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const sqlite = require('../db/sqlite');
 
 const DATA_FILE = path.join(__dirname, '..', 'data', 'wishlist.json');
+const USE_SQLITE = process.env.USE_SQLITE !== 'false';
 
 function ensureDataFile() {
   if (!fs.existsSync(DATA_FILE)) {
@@ -30,11 +32,17 @@ function makeId() {
 }
 
 async function findByUser(userId) {
+  if (USE_SQLITE) {
+    return sqlite.findWishlistByUser(userId);
+  }
   const all = readAll();
   return all.filter((i) => i.userId === userId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
 async function createForUser(userId, payload) {
+  if (USE_SQLITE) {
+    return sqlite.createWishlistForUser(userId, payload);
+  }
   const all = readAll();
   const item = {
     id: makeId(),
@@ -58,6 +66,9 @@ async function createForUser(userId, payload) {
 }
 
 async function removeById(id, userId) {
+  if (USE_SQLITE) {
+    return sqlite.removeWishlistById(id, userId);
+  }
   const all = readAll();
   const idx = all.findIndex((i) => i.id === id && i.userId === userId);
   if (idx === -1) return null;

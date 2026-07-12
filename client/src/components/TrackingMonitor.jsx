@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import io from 'socket.io-client';
-import axios from 'axios';
-import { API_URL } from '../config';
+import { getSocket, tracksApi } from '../api/client';
 
 // Hook cleanly into our backend socket server instance
-const socket = io(API_URL);
+const socket = getSocket();
 
 const TrackingMonitor = () => {
   const [tracks, setTracks] = useState([]);
@@ -12,7 +10,7 @@ const TrackingMonitor = () => {
 
   useEffect(() => {
     // Pull the active matrix on initial panel mount load
-    axios.get(`${API_URL}/api/tracks`)
+    tracksApi.list()
       .then(res => setTracks(res.data))
       .catch(err => console.error("Could not reach telemetry service layers:", err));
 

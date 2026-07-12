@@ -1,20 +1,40 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { wishlistApi } from '../api/client';
 
 const WishlistManager = ({ triggerToast }) => {
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ platform: 'Blinkit', title: '', url: '', location: '', latitude: '', longitude: '', monitor: false, desiredPrice: '', allowDangerousDelivery: false });
-  const [preview, setPreview] = useState({ loading: false, title: '', checkoutUrl: '' });
-  const navigate = useNavigate();
+  const [loadState, setLoadState] = useState({ loading: true, error: '' });
+  const [form, setForm] = useState({
+    platform: 'Blinkit',
+    title: '',
+    url: '',
+    location: '',
+    latitude: '',
+    longitude: '',
+    monitor: false,
+    desiredPrice: '',
+    allowDangerousDelivery: false,
+  });
+  const [preview, setPreview] = useState({ loading: false, title: '', checkoutUrl: '', price: null });
 
   const load = useCallback(() => {
+    setLoadState({ loading: true, error: '' });
     wishlistApi.list()
-      .then((res) => setItems(res.data))
-      .catch(() => triggerToast?.('Failed to load saved items', 'error'));
-  }, [triggerToast]);
+      .then((res) => {
+        setItems(Array.isArray(res.data) ? res.data : []);
+        setLoadState({ loading: false, error: '' });
+      })
+      .catch((err) => {
+        const message = err.response?.status === 401
+          ? 'Session expired. Please sign in again to view saved items.'
+          : 'Could not load saved items. Check that the server is running.';
+        setLoadState({ loading: false, error: message });
+      });
+  }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -23,12 +43,21 @@ const WishlistManager = ({ triggerToast }) => {
       if (!payload.title) return triggerToast?.('Enter item title', 'error');
       const res = await wishlistApi.create(payload);
       setItems((s) => [res.data, ...s]);
-      setForm({ platform: 'Blinkit', title: '', url: '', location: '', latitude: '', longitude: '', monitor: false });
+      setForm({
+        platform: 'Blinkit',
+        title: '',
+        url: '',
+        location: '',
+        latitude: '',
+        longitude: '',
+        monitor: false,
+        desiredPrice: '',
+        allowDangerousDelivery: false,
+      });
       triggerToast?.('Saved item');
     } catch (err) {
       if (err.response?.status === 401) {
-        triggerToast?.('Please sign in to save items', 'error');
-        navigate('/auth');
+        triggerToast?.('Session expired. Please sign in again to save items.', 'error');
         return;
       }
       triggerToast?.(err.response?.data?.error || 'Failed to save', 'error');
@@ -46,13 +75,23 @@ const WishlistManager = ({ triggerToast }) => {
   const handlePreview = async () => {
     if (!form.url) return triggerToast?.('Enter a product URL to preview', 'error');
     try {
-      setPreview({ loading: true, title: '', checkoutUrl: '' });
+      setPreview({ loading: true, title: '', checkoutUrl: '', price: null });
       const res = await wishlistApi.preview(form.url);
-      setPreview({ loading: false, title: res.data.title || '', checkoutUrl: res.data.checkoutUrl || form.url });
-      setForm((f) => ({ ...f, title: res.data.title || f.title, checkoutUrl: res.data.checkoutUrl || f.url, lastSeenPrice: res.data.price ?? f.lastSeenPrice }));
+      setPreview({
+        loading: false,
+        title: res.data.title || '',
+        checkoutUrl: res.data.checkoutUrl || form.url,
+        price: res.data.price ?? null,
+      });
+      setForm((f) => ({
+        ...f,
+        title: res.data.title || f.title,
+        checkoutUrl: res.data.checkoutUrl || f.url,
+        lastSeenPrice: res.data.price ?? f.lastSeenPrice,
+      }));
       triggerToast?.('Preview loaded');
     } catch {
-      setPreview({ loading: false, title: '', checkoutUrl: '' });
+      setPreview({ loading: false, title: '', checkoutUrl: '', price: null });
       triggerToast?.('Preview failed', 'error');
     }
   };
@@ -89,7 +128,7 @@ const WishlistManager = ({ triggerToast }) => {
         <button type="submit" style={{ padding: '8px 12px' }}>Save</button>
       </form>
 
-      {preview.title || preview.checkoutUrl || preview.price ? (
+      {preview.title || preview.checkoutUrl || preview.price != null ? (
         <div style={{ marginTop: 8, padding: 10, border: '1px dashed #e6eef6', borderRadius: 8 }}>
           <div style={{ fontWeight: 700 }}>{preview.title || 'Preview'}</div>
           <div style={{ color: '#64748b' }}>{preview.checkoutUrl}</div>
@@ -98,19 +137,30 @@ const WishlistManager = ({ triggerToast }) => {
       ) : null}
 
       <div>
-                {items.length === 0 ? (
+        {loadState.loading ? (
+          <div style={{ color: '#64748b' }}>Loading saved items...</div>
+        ) : loadState.error ? (
+          <div style={{ padding: '14px', border: '1px dashed #cbd5e1', borderRadius: '8px', color: '#475569' }}>
+            <div style={{ marginBottom: '10px' }}>{loadState.error}</div>
+            <button type="button" onClick={load} style={{ padding: '8px 12px' }}>Retry</button>
+          </div>
+        ) : items.length === 0 ? (
           <div style={{ color: '#64748b' }}>No saved items yet.</div>
         ) : (
           items.map((it) => (
             <div key={it.id} style={{ padding: '12px', border: '1px solid #e6eef6', borderRadius: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
               <div>
-                        <div style={{ fontWeight: 700 }}>{it.title} <span style={{ fontSize: 12, color: '#64748b' }}>· {it.platform}</span></div>
-                        <div style={{ fontSize: 13, color: '#64748b' }}>{it.url} {it.checkoutUrl ? `· checkout: ${it.checkoutUrl}` : ''}</div>
-                        {it.desiredPrice ? <div style={{ fontSize: 13, color: '#0f172a' }}>Desired: ₹{it.desiredPrice}</div> : null}
+                <div style={{ fontWeight: 700 }}>
+                  {it.title} <span style={{ fontSize: 12, color: '#64748b' }}>· {it.platform}</span>
+                </div>
+                <div style={{ fontSize: 13, color: '#64748b' }}>
+                  {it.url} {it.checkoutUrl ? `· checkout: ${it.checkoutUrl}` : ''}
+                </div>
+                {it.desiredPrice ? <div style={{ fontSize: 13, color: '#0f172a' }}>Desired: ₹{it.desiredPrice}</div> : null}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {it.monitor && <div style={{ fontSize: 12, color: '#10b981' }}>Monitoring</div>}
-                <button onClick={() => handleRemove(it.id)} style={{ padding: '6px 10px' }}>Remove</button>
+                <button type="button" onClick={() => handleRemove(it.id)} style={{ padding: '6px 10px' }}>Remove</button>
               </div>
             </div>
           ))

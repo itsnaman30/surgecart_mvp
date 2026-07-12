@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -53,10 +54,12 @@ app.use((req, res, next) => {
 // add an error handler below to convert that into a 400 with a helpful message.
 app.use(express.json());
 app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.removeHeader('X-XSS-Protection');
     res.setHeader('Cache-Control', 'no-store');
-    next();
+  }
+  next();
 });
 
 app.use('/api/auth', authRoutes);
@@ -75,6 +78,13 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/metrics', (req, res) => {
   res.json(pollingEngine.getMetrics());
+});
+
+// Serve built client assets when running in production or with a static build.
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(clientDist));
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
 });
 
 // Centralized error handler for body parse errors and unexpected exceptions.

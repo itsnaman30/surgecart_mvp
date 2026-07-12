@@ -17,6 +17,7 @@
     "@aws-sdk/client-sns": "^3.500.0",
     "axios": "^1.16.0",
     "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^12.4.6",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
