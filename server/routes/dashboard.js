@@ -22,6 +22,7 @@ router.get('/', requireAuth, async (req, res) => {
       name: user.name,
     });
   } catch (error) {
+    console.error('[dashboard] Failed to fetch user data:', error && (error.stack || error.message || error));
     res.status(500).json({ error: 'Failed to fetch user data' });
   }
 });

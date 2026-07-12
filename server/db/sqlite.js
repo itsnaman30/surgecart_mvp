@@ -42,6 +42,7 @@ function readJson(filePath, fallback) {
   try {
     return JSON.parse(fs.readFileSync(filePath, 'utf8') || JSON.stringify(fallback));
   } catch (err) {
+    console.warn(`[sqlite] Could not read/parse ${filePath}, using fallback:`, err.message);
     return fallback;
   }
 }

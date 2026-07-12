@@ -67,6 +67,7 @@ async function scrapeProduct(url) {
       price: price == null ? null : Number(price),
     };
   } catch (err) {
+    console.warn(`[productScraper] Failed to scrape ${url}:`, err && (err.message || err));
     return { title: '', checkoutUrl: url, price: null };
   }
 }

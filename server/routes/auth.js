@@ -22,7 +22,9 @@ async function findUserByEmail(email) {
       const user = await User.findOne({ email });
       if (user) return { source: 'mongo', user };
     } catch (err) {
-      // fall through to in-memory store
+      // Mongo lookup failed; log it before falling through to the in-memory
+      // store so a real DB outage is not mistaken for "user not found".
+      console.warn('[auth] Mongo lookup failed, falling back to in-memory store:', err.message);
     }
   }
   const found = [...inMemoryUsers.values()].find((u) => u.email === email);

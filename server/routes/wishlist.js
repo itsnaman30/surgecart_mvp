@@ -24,6 +24,9 @@ module.exports = function (io) {
       const scraped = await scrapeProduct(url);
       res.json({ title: scraped.title || '', checkoutUrl: scraped.checkoutUrl || url, price: scraped.price });
     } catch (err) {
+      // Preview is best-effort: fall back to an empty preview but log so the
+      // scrape failure is not silently swallowed.
+      console.warn('[wishlist] preview scrape failed:', err && (err.stack || err.message || err));
       res.status(200).json({ title: '', checkoutUrl: req.body?.url || '', price: null });
     }
   });
@@ -33,6 +36,7 @@ module.exports = function (io) {
       const items = await wishlistService.findByUser(req.userId);
       res.json(items);
     } catch (err) {
+      console.error('[wishlist] Failed to load wishlist:', err && (err.stack || err.message || err));
       res.status(500).json({ error: 'Failed to load wishlist' });
     }
   });
@@ -76,6 +80,7 @@ module.exports = function (io) {
 
       res.status(201).json(item);
     } catch (err) {
+      console.error('[wishlist] Failed to save item:', err && (err.stack || err.message || err));
       res.status(500).json({ error: 'Failed to save item' });
     }
   });
@@ -86,6 +91,7 @@ module.exports = function (io) {
       if (!removed) return res.status(404).json({ error: 'Item not found' });
       res.json({ message: 'Removed', item: removed });
     } catch (err) {
+      console.error('[wishlist] Failed to remove item:', err && (err.stack || err.message || err));
       res.status(500).json({ error: 'Failed to remove item' });
     }
   });
