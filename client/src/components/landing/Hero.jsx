@@ -5,7 +5,7 @@ const Hero = () => (
   <section className="sc-hero sc-container">
     <div className="sc-hero-glow" aria-hidden="true" />
 
-    <span className="sc-eyebrow">Now in private beta</span>
+    <span className="sc-eyebrow">Now in private beta · Pro coming soon</span>
 
     <h1 className="sc-hero-title">
       Never miss a<br />

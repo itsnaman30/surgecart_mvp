@@ -21,14 +21,14 @@ const plans = [
     period: '/ month · coming soon',
     featured: false,
     features: [
-      'Unlimited watches',
-      'Multi-device sync',
+      '50 watches',
+      'Smart surge mode',
       'Priority alert queue',
       'SMS fallback alerts',
-      'Historical slot analytics',
+      'Demand-aware scan cadence',
     ],
-    cta: 'Notify me at launch',
-    ctaHref: '#waitlist',
+    cta: 'Upgrade to Pro',
+    ctaHref: '/auth',
   },
 ];
 

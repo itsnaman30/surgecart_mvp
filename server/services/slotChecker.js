@@ -14,12 +14,10 @@ function heuristicCheck(platform) {
     success: true,
     isSlotAvailable,
     source: 'demand-heuristic',
-    surgeLevel: isPeak ? 'high' : isGoodWindow ? 'low' : 'medium',
+    surgeLevel: isSlotAvailable ? 'low' : 'unknown',
     message: isSlotAvailable
       ? 'Delivery window detected — checkout lane appears open'
-      : isPeak
-        ? 'Peak surge active — slots heavily constrained'
-        : 'No open slots right now — continuing watch',
+      : 'No live demand signal from the selected area yet — continuing watch',
   };
 }
 
@@ -87,4 +85,4 @@ async function checkSlots(platform, latitude, longitude) {
   };
 }
 
-module.exports = { checkSlots, checkoutUrl, normalizePlatform };
+module.exports = { checkSlots, checkoutUrl, normalizePlatform, heuristicCheck };

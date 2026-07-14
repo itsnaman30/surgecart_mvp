@@ -1,0 +1,8 @@
+const sourceFile = "cust-record.csv";
+const outputFile = "server/data/wushlist.json";
+
+readFile(sourceFile)
+.then(parseRows)
+.then(normalizeRecords)
+.then(writeJson(outputFile))
+.then(() => console.log("Import complete."));

@@ -1,6 +1,7 @@
 const { checkSlots } = require('./slotChecker');
 const trackStore = require('./trackStore');
 const smsService = require('./smsService');
+const { getSmartIntervalMs, getSurgeStrategy } = require('./surgeOptimizer');
 
 const activePollingLoops = {};
 let ioInstance = null;
@@ -76,10 +77,11 @@ async function runCheck(track, { manual = false } = {}) {
   aggregateMetrics.lastSurgeLevel = result.surgeLevel || 'unknown';
   emitMetrics();
 
+  const strategy = getSurgeStrategy(track, result);
   const updates = {
     checkCount: (track.checkCount || 0) + 1,
     lastCheckedAt: new Date(),
-    lastResult: result.message || (result.isSlotAvailable ? 'Slot available' : 'No slots — surge period'),
+    lastResult: strategy.message || result.message || (result.isSlotAvailable ? 'Slot available' : 'No slots — surge period'),
     surgeLevel: result.surgeLevel || 'unknown',
     checkoutUrl: result.checkoutUrl || '',
   };
@@ -94,6 +96,10 @@ async function runCheck(track, { manual = false } = {}) {
       : `⏱️ ${updates.lastResult} (${result.source})`,
     result.isSlotAvailable ? 'success' : 'cooldown'
   );
+
+  if (strategy.priorityBoost && !result.isSlotAvailable) {
+    streamTrace(trackId, `⚡ Pro surge mode active: ${strategy.strategy}`, 'priority');
+  }
 
   if (result.isSlotAvailable) {
     const notified = await trackStore.updateById(trackId, { status: 'Notified', ...updates });
@@ -126,7 +132,7 @@ function startTrackPolling(io, track) {
   if (track.status !== 'Tracking') return;
   if (activePollingLoops[trackId]) return;
 
-  const intervalMs = track.pollingIntervalMs || globalPollingIntervalMs;
+  const intervalMs = getSmartIntervalMs(track, track.pollingIntervalMs || globalPollingIntervalMs);
 
   streamTrace(trackId, `🚀 Watch started — first scan running now (every ${intervalMs / 1000}s after)`, 'init');
 

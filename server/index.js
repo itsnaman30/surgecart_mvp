@@ -14,6 +14,7 @@ const waitlistRoutes = require('./routes/waitlist');
 const authRoutes = require('./routes/auth');
 const wishlistRoutesFactory = require('./routes/wishlist');
 const dashboardRoutes = require('./routes/dashboard');
+const { buildDemandAnalytics } = require('./services/demandAnalytics');
 
 const app = express();
 const server = http.createServer(app);
@@ -92,25 +93,13 @@ app.get(/^\/(?!api).*/, (req, res) => {
 // the end of the file so malformed JSON returns 400 and other errors return 500.
 
 app.get('/api/analytics/demand', async (req, res) => {
-  const hour = new Date().getHours();
-  const slots = [
-    { hour: '08:00', probability: 25 },
-    { hour: '11:00', probability: 40 },
-    { hour: '14:00', probability: 55 },
-    { hour: '17:00', probability: 15 },
-    { hour: '20:00', probability: 8 },
-    { hour: '23:00', probability: 35 },
-  ].map((s) => ({
-    ...s,
-    label: s.hour,
-    isNow: parseInt(s.hour, 10) === hour || Math.abs(parseInt(s.hour, 10) - hour) <= 1,
-  }));
-
   const tracks = await trackStore.findAll();
-  const activeWatches = tracks.filter((t) => t.status === 'Tracking').length;
-  const notifiedToday = tracks.filter((t) => t.status === 'Notified').length;
+  const analytics = buildDemandAnalytics({
+    tracks,
+    lastSurgeLevel: pollingEngine.getMetrics().lastSurgeLevel,
+  });
 
-  res.json({ slots, activeWatches, notifiedToday, currentSurge: pollingEngine.getMetrics().lastSurgeLevel });
+  res.json(analytics);
 });
 
 app.get('/api/tracks', async (req, res) => {

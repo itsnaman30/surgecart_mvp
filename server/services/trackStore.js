@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const sqlite = require('../db/sqlite');
+const { getPlanLimit, normalizePlan } = require('./planService');
 
 const TrackSchema = new mongoose.Schema({
   platform: { type: String, required: true },
@@ -24,7 +25,7 @@ let useInMemoryDB = false;
 let memoryDB = [];
 const USE_SQLITE = process.env.USE_SQLITE !== 'false';
 
-const MAX_WATCHES = 3;
+const DEFAULT_MAX_WATCHES = 3;
 
 function setMemoryMode(enabled) {
   useInMemoryDB = enabled;
@@ -104,9 +105,11 @@ async function findTracking() {
 }
 
 async function create(data) {
+  const plan = normalizePlan(data.plan || 'free');
+  const maxWatches = getPlanLimit(plan);
   const all = await findAll();
-  if (all.length >= MAX_WATCHES) {
-    const err = new Error(`Beta limit: maximum ${MAX_WATCHES} watches. Remove one to add another.`);
+  if (all.length >= maxWatches) {
+    const err = new Error(`Plan limit reached: your ${plan} plan allows ${maxWatches} watches. Upgrade to Pro for more.`);
     err.status = 400;
     throw err;
   }
@@ -172,7 +175,7 @@ module.exports = {
   Track,
   setMemoryMode,
   isMemoryMode,
-  MAX_WATCHES,
+  MAX_WATCHES: DEFAULT_MAX_WATCHES,
   countActive,
   findAll,
   findById,

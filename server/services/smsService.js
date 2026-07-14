@@ -1,40 +1,41 @@
 const fs = require('fs');
 const path = require('path');
-const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const twilio = require('twilio');
 
 const TARGETS_FILE = path.join(__dirname, '..', 'data', 'sms-targets.json');
 let registeredTargets = [];
-let snsClient = null;
+let twilioClient = null;
 
 function stripEnvComment(value) {
   return (value || '').replace(/\s*#.*$/, '').trim();
 }
 
-function isAwsSnsConfigured() {
-  const region = stripEnvComment(process.env.AWS_REGION);
-  const accessKey = stripEnvComment(process.env.AWS_ACCESS_KEY_ID);
-  const secretKey = stripEnvComment(process.env.AWS_SECRET_ACCESS_KEY);
-  
-  if (!region || !accessKey || !secretKey) return false;
-  if (accessKey.includes('your_') || secretKey.includes('your_')) return false;
+function isSmsConfigured() {
+  const accountSid = stripEnvComment(process.env.TWILIO_ACCOUNT_SID);
+  const authToken = stripEnvComment(process.env.TWILIO_AUTH_TOKEN);
+  const fromNumber = stripEnvComment(process.env.TWILIO_PHONE_NUMBER);
+
+  if (!accountSid || !authToken || !fromNumber) return false;
+  if (accountSid.includes('your_') || authToken.includes('your_') || fromNumber.includes('your_')) return false;
   return true;
 }
 
-function initializeAwsSns() {
-  if (snsClient || !isAwsSnsConfigured()) return snsClient;
-  
+function isAwsSnsConfigured() {
+  return isSmsConfigured();
+}
+
+function initializeTwilioClient() {
+  if (twilioClient || !isSmsConfigured()) return twilioClient;
+
   try {
-    snsClient = new SNSClient({
-      region: stripEnvComment(process.env.AWS_REGION),
-      credentials: {
-        accessKeyId: stripEnvComment(process.env.AWS_ACCESS_KEY_ID),
-        secretAccessKey: stripEnvComment(process.env.AWS_SECRET_ACCESS_KEY),
-      },
-    });
-    console.log('[SMS] AWS SNS initialized');
-    return snsClient;
+    twilioClient = twilio(
+      stripEnvComment(process.env.TWILIO_ACCOUNT_SID),
+      stripEnvComment(process.env.TWILIO_AUTH_TOKEN),
+    );
+    console.log('[SMS] Twilio client initialized');
+    return twilioClient;
   } catch (err) {
-    console.error('[SMS] Failed to initialize AWS SNS:', err.message);
+    console.error('[SMS] Failed to initialize Twilio client:', err.message);
     return null;
   }
 }
@@ -112,25 +113,24 @@ function collectAlertPhones(track) {
 async function sendSms(to, body) {
   if (!to) return { sent: false, reason: 'missing_number' };
 
-  if (!isAwsSnsConfigured()) {
+  if (!isSmsConfigured()) {
     console.log(`[SMS stub] Would alert ${to}: ${body}`);
-    return { sent: false, reason: 'aws_sns_not_configured' };
+    return { sent: false, reason: 'sms_not_configured' };
   }
 
   try {
-    const client = initializeAwsSns();
+    const client = initializeTwilioClient();
     if (!client) {
-      console.error(`[SMS] Failed to initialize AWS SNS client for ${to}`);
-      return { sent: false, reason: 'aws_sns_initialization_failed' };
+      console.error(`[SMS] Failed to initialize Twilio client for ${to}`);
+      return { sent: false, reason: 'sms_initialization_failed' };
     }
 
-    const command = new PublishCommand({
-      Message: body,
-      PhoneNumber: to,
+    await client.messages.create({
+      body,
+      from: stripEnvComment(process.env.TWILIO_PHONE_NUMBER),
+      to,
     });
-    
-    await client.send(command);
-    
+
     console.log(`[SMS] ✅ Alert sent to ${to}`);
     return { sent: true };
   } catch (err) {
@@ -171,15 +171,16 @@ async function sendRegistrationConfirmation(to) {
 loadRegisteredTargets();
 
 // Log SMS service status on startup
-if (isAwsSnsConfigured()) {
-  console.log(`[SMS] ✅ AWS SNS configured and ready (Region: ${stripEnvComment(process.env.AWS_REGION)})`);
+if (isSmsConfigured()) {
+  console.log(`[SMS] ✅ Twilio configured and ready (From: ${stripEnvComment(process.env.TWILIO_PHONE_NUMBER)})`);
 } else {
-  console.log('[SMS] ⚠️  AWS SNS not configured. Set AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY to enable SMS');
+  console.log('[SMS] ⚠️  Twilio not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER to enable SMS');
 }
 console.log(`[SMS] Registered phone targets on startup: ${registeredTargets.length}`);
 
 module.exports = {
   normalizePhoneNumber,
+  isSmsConfigured,
   isAwsSnsConfigured,
   loadRegisteredTargets,
   getRegisteredTargets,

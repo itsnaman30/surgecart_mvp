@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
         if (existing) {
           return res.status(400).json({ error: 'Email already registered' });
         }
-        const user = new User({ email, password: hashedPassword, name });
+        const user = new User({ email, password: hashedPassword, name, plan: 'free' });
         await user.save();
         return res.status(201).json({
           message: 'User registered',
@@ -60,11 +60,11 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
     const id = mkId();
-    const user = { _id: id, id, email, password: hashedPassword, name };
+    const user = { _id: id, id, email, password: hashedPassword, name, plan: 'free' };
     inMemoryUsers.set(id, user);
     return res.status(201).json({
-      message: 'User registered (in-memory)',
-      user: { id, email, name },
+      message: 'User registered successfully',
+      user: { id, email, name, plan: 'free' },
     });
   } catch (err) {
     console.error('[auth] register failed:', err.stack || err.message || err);
@@ -88,7 +88,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ id: found._id || found.id }, JWT_SECRET, { expiresIn: '1d' });
     res.json({
       token,
-      user: { id: found._id || found.id, email: found.email, name: found.name },
+      user: { id: found._id || found.id, email: found.email, name: found.name, plan: found.plan || 'free' },
     });
   } catch (err) {
     console.error('[auth] login failed:', err.stack || err.message || err);

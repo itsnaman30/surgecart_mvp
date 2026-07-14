@@ -62,7 +62,7 @@ router.post('/sms-route', async (req, res) => {
 
 
 
-  if (!smsService.isAwsSnsConfigured()) {
+  if (!smsService.isSmsConfigured()) {
 
     return res.status(200).json({
 
@@ -72,7 +72,7 @@ router.post('/sms-route', async (req, res) => {
 
       smsLive: false,
 
-      message: 'Number saved. Set AWS credentials (AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) in server .env to enable live SMS.',
+      message: 'Number saved. Set Twilio credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER) in server .env to enable live SMS.',
 
       targets: smsService.getRegisteredTargets(),
 
@@ -96,7 +96,7 @@ router.post('/sms-route', async (req, res) => {
 
       ? 'Number registered — you will receive real SMS when slots open.'
 
-      : 'Number saved, but confirmation SMS could not be sent. Check AWS SNS settings.',
+      : 'Number saved, but confirmation SMS could not be sent. Check Twilio settings.',
 
     targets: smsService.getRegisteredTargets(),
 
@@ -112,7 +112,7 @@ router.get('/sms-route', (req, res) => {
 
     targets: smsService.getRegisteredTargets(),
 
-    smsLive: smsService.isAwsSnsConfigured(),
+    smsLive: smsService.isSmsConfigured(),
 
   });
 

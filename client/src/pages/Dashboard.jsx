@@ -214,15 +214,8 @@ const Dashboard = () => {
   };
 
   const chartSlots = demandData?.slots || [];
-  const chartWidth = 700;
-  const chartHeight = 160;
-  const padding = 36;
-  const points = chartSlots.map((d, i) => {
-    const x = padding + (i * (chartWidth - padding * 2)) / Math.max(chartSlots.length - 1, 1);
-    const y = chartHeight - padding - (d.probability * (chartHeight - padding * 2)) / 100;
-    return { x, y, ...d };
-  });
-  const pathD = points.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
+  const hasLiveSignal = Boolean(demandData?.isLiveSignal);
+  const signalSummary = demandData?.signalSummary || 'No live demand signal from the selected area yet.';
 
   return (
     <div style={styles.layout}>
@@ -237,7 +230,8 @@ const Dashboard = () => {
           ))}
         </nav>
         <div style={{ fontSize: '11px', color: '#475569', lineHeight: 1.5 }}>
-          {watchCount}/{MAX_WATCHES} watches
+          <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{user?.plan === 'pro' ? 'Pro plan' : 'Free plan'}</div>
+          <div>{watchCount}/{user?.plan === 'pro' ? '50' : MAX_WATCHES} watches used</div>
         </div>
       </aside>
 
@@ -247,7 +241,7 @@ const Dashboard = () => {
             <div style={{ fontSize: '13px', color: connected ? '#10b981' : '#ef4444', fontWeight: '600' }}>
               {connected ? '● Live — monitoring your slots' : '○ Disconnected — start the server'}
             </div>
-            <div style={{ fontSize: '13px', color: '#64748b' }}>Signed in as {getUserDisplayName(user)}</div>
+            <div style={{ fontSize: '13px', color: '#64748b' }}>Signed in as {getUserDisplayName(user)} · {user?.plan === 'pro' ? 'Pro' : 'Free'}</div>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button type="button" onClick={() => navigate('/')} style={styles.backButton}>← Back to site</button>
@@ -262,6 +256,18 @@ const Dashboard = () => {
               <p style={styles.dashSubtitle}>
                 SurgeCart monitors Blinkit, Zepto, and Instamart when demand is high — and alerts you the moment a slot opens.
               </p>
+
+              {!user?.plan || user.plan === 'free' ? (
+                <div style={{ ...styles.metricCard, background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', border: '1px solid #c7d2fe', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#4338ca', marginBottom: '4px' }}>Upgrade to Pro</div>
+                      <div style={{ fontSize: '13px', color: '#475569', lineHeight: 1.5 }}>Unlock smarter peak-demand monitoring, faster scans during rush hours, and better surge-aware alerts.</div>
+                    </div>
+                    <button type="button" onClick={() => navigate('/')} style={{ ...styles.primaryBtn, padding: '10px 14px', borderRadius: '999px' }}>See plans</button>
+                  </div>
+                </div>
+              ) : null}
 
               <div style={styles.statsGrid}>
                 <div style={styles.metricCard}>
@@ -307,23 +313,20 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {chartSlots.length > 0 && (
-                <div style={styles.chartCard}>
-                  <h3 style={styles.sectionHeading}>Best times to find slots today</h3>
-                  <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 20px' }}>
-                    Lower surge periods mean better odds — based on typical quick-commerce demand patterns.
-                  </p>
-                  <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} style={{ width: '100%', height: 'auto' }}>
-                    <path d={pathD} fill="none" stroke="#10b981" strokeWidth="2.5" />
-                    {points.map((p, i) => (
-                      <g key={i}>
-                        <circle cx={p.x} cy={p.y} r={p.isNow ? 6 : 4} fill={p.isNow ? '#f59e0b' : '#10b981'} />
-                        <text x={p.x} y={chartHeight - 8} textAnchor="middle" fontSize="10" fill="#94a3b8">{p.label}</text>
-                      </g>
-                    ))}
-                  </svg>
+              <div style={styles.chartCard}>
+                <h3 style={styles.sectionHeading}>Live demand signal</h3>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 12px' }}>
+                  {signalSummary}
+                </p>
+                <div style={{ padding: '12px 14px', borderRadius: '10px', backgroundColor: hasLiveSignal ? '#ecfdf5' : '#f8fafc', border: `1px solid ${hasLiveSignal ? '#a7f3d0' : '#e2e8f0'}` }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: hasLiveSignal ? '#047857' : '#475569' }}>
+                    {hasLiveSignal ? 'Live telemetry available' : 'Waiting for a real scan result'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                    SurgeCart will only show a demand signal when it has actual scan data for the selected area.
+                  </div>
                 </div>
-              )}
+              </div>
             </>
           )}
 
