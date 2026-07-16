@@ -28,9 +28,10 @@ const plans = [
       'Demand-aware scan cadence',
     ],
     cta: 'Upgrade to Pro',
-    ctaHref: '/auth',
+    ctaHref: '/premium',
   },
 ];
+
 
 const Pricing = () => (
   <section id="pricing" className="sc-section sc-section-alt">
@@ -60,7 +61,11 @@ const Pricing = () => (
                 {plan.cta}
               </a>
             ) : (
-              <Link to="/dashboard" className="sc-btn sc-btn-primary" style={{ width: '100%' }}>
+              <Link
+                to={plan.ctaHref}
+                className={`sc-btn ${plan.featured ? 'sc-btn-primary' : 'sc-btn-ghost'} `}
+                style={{ width: '100%' }}
+              >
                 {plan.cta}
               </Link>
             )}

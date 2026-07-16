@@ -20,7 +20,7 @@ const Dashboard = () => {
   const [phoneNumber, setPhoneNumber] = useState(localStorage.getItem('surge_phone_route') || '');
   const [pollingInterval, setPollingInterval] = useState('30000');
   const [pushEnabled, setPushEnabled] = useState(typeof Notification !== 'undefined' && Notification.permission === 'granted');
-  const [connected, setConnected] = useState(socket.connected);
+
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   const [notifications, setNotifications] = useState([]);
 
@@ -76,11 +76,12 @@ const Dashboard = () => {
       })
       .catch(() => {});
 
-    const onConnect = () => setConnected(true);
-    const onDisconnect = () => setConnected(false);
+    // Connection status UI removed — keep socket alive silently
+    // const onConnect = () => setConnected(true);
+    // const onDisconnect = () => setConnected(false);
 
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
+    // socket.on('connect', onConnect);
+    // socket.on('disconnect', onDisconnect);
     socket.on('slot_update', (updatedTrack) => {
       setWatches((prev) => prev.map((w) => (w._id === updatedTrack._id ? updatedTrack : w)));
       triggerToast(`Slot opened on ${updatedTrack.platform}! Opening checkout...`, 'success');
@@ -111,8 +112,7 @@ const Dashboard = () => {
     }
 
     return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
+      // No connect/disconnect UI handlers are registered anymore.
       socket.off('slot_update');
       socket.off('engine_trace');
       socket.off('system_metrics_update');
@@ -238,9 +238,6 @@ const Dashboard = () => {
       <div style={styles.workspace}>
         <header style={styles.topHeader}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ fontSize: '13px', color: connected ? '#10b981' : '#ef4444', fontWeight: '600' }}>
-              {connected ? '● Live — monitoring your slots' : '○ Disconnected — start the server'}
-            </div>
             <div style={{ fontSize: '13px', color: '#64748b' }}>Signed in as {getUserDisplayName(user)} · {user?.plan === 'pro' ? 'Pro' : 'Free'}</div>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>

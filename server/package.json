@@ -4,7 +4,7 @@
   "description": "SurgeCart Backend Engine",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test --test-reporter=spec __tests__/demandAnalytics.test.js __tests__/slotChecker.test.js __tests__/smsService.test.js __tests__/planService.test.js __tests__/surgeOptimizer.test.js",
     "predev": "node scripts/free-port.js 5000",
     "dev": "nodemon --use-system-ca index.js",
     "start": "node index.js"
@@ -34,3 +34,4 @@
     "nodemon": "^3.1.0"
   }
 }
+
