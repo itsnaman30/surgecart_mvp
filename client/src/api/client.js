@@ -25,6 +25,7 @@ export const tracksApi = {
   create: (payload) => api.post('/api/tracks', payload),
   update: (id, payload) => api.patch(`/api/tracks/${id}`, payload),
   remove: (id) => api.delete(`/api/tracks/${id}`),
+  usage: (plan) => api.get('/api/tracks/usage', { params: { plan } }),
   simulate: (id) => api.post(`/api/test/simulate-slot/${id}`),
 };
 

@@ -14,7 +14,7 @@ const parseLongitude = (value) => {
   return n;
 };
 
-const TrackingForm = ({ onWatchCreated, triggerToast, activeCount = 0, pollingInterval = 30000 }) => {
+const TrackingForm = ({ onWatchCreated, triggerToast, activeCount = 0, pollingInterval = 30000, scanUsage = {} }) => {
   const [platform, setPlatform] = useState('Blinkit');
   const [locationName, setLocationName] = useState('');
   const [locationMode, setLocationMode] = useState('auto');
@@ -92,7 +92,7 @@ const TrackingForm = ({ onWatchCreated, triggerToast, activeCount = 0, pollingIn
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (activeCount >= MAX_WATCHES) {
-      return triggerToast(`Beta limit: max ${MAX_WATCHES} active watches. Pause or remove one first.`, 'error');
+      return triggerToast(`Free plan: ${scanUsage.scansUsed}/${scanUsage.scansLimit} lifetime scans used. Deleting does not restore scans.`, 'error');
     }
     if (!locationName.trim()) return triggerToast('Enter a location name (e.g. Home, Office)', 'error');
 

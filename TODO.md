@@ -1,13 +1,36 @@
-# TODO
+# Implementation Plan - Scan Limit Fix & UI Overhaul
 
-## Premium version (blank for now)
-- [x] Create `client/src/pages/Premium.jsx` as a blank/placeholder Premium page
-- [x] Add route `GET /premium` in `client/src/App.jsx`
-- [x] Update landing `Pricing` CTA for Pro to link to `/premium`
-- [x] Verify in browser that `/premium` renders and CTA navigates correctly (build succeeded)
+## Step 1: Server - Add auth, per-user scan limit (lifetime), DELETE/PATCH endpoints
+- [x] Add in-memory per-user scan counter (3 lifetime for free)
+- [x] Add requireAuth middleware to track endpoints
+- [x] Add DELETE /api/tracks/:id and PATCH /api/tracks/:id
+- [x] Filter tracks by userId
+- [x] Deleting a watch does NOT restore scan slot for free users
 
-## Test + scripts sanity fixes
-- [x] Fix `cd client && ...` / `cd ... && ...` usage in documentation/usage by ensuring PowerShell-safe separators (`;` instead of `&&`).
-- [x] Wire up real backend tests via `server/package.json` using Node’s built-in `node --test` runner.
-- [x] Ensure `npm test` from repo root runs backend tests successfully.
+## Step 2: Client config - Add scan limit constants
+- [x] Update config.js with scan limit constants
+
+## Step 3: Client Dashboard.jsx - Full visual redesign
+- [x] Glassmorphism cards, gradients, animations
+- [x] Animated scan usage progress bar
+- [x] "X of 3 free scans used" display
+- [x] Premium upgrade card (compelling design)
+- [x] Better visual hierarchy and micro-animations
+
+## Step 4: Client TrackingForm.jsx - Update limit messaging
+- [x] Communicates "lifetime" scan limit, not concurrent
+
+## Step 5: Client WatchCard.jsx - Enhanced design
+- [x] Hover effects, better status indicators
+- [x] Better visual design
+
+## Step 6: Client Premium.jsx - Full feature comparison page
+- [x] Feature comparison table
+- [x] Compelling premium messaging
+
+## Step 7: CSS Animations
+- [x] Added @keyframes pulse to index.css
+
+## Step 8: Done
+- [x] All changes complete
 

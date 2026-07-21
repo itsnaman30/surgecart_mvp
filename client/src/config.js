@@ -4,4 +4,6 @@ const defaultApiUrl = isLocalOrigin ? 'http://localhost:5000' : browserOrigin;
 
 export const API_URL = (import.meta.env.VITE_API_URL || defaultApiUrl || '').replace(/\/+$/, '');
 export const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL || API_URL || '').replace(/\/+$/, '');
-export const MAX_WATCHES = 3;
+export const FREE_SCAN_LIMIT = 3;
+export const PRO_SCAN_LIMIT = 9999;
+export const MAX_WATCHES = FREE_SCAN_LIMIT;
